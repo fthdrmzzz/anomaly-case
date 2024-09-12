@@ -12,3 +12,17 @@ influxdb provides ready to run code in its ui. I have copied it to `data_simulat
 After running it, it will add data every 5 seconds. You can observe it in the UI:
 
 ![alt text](docs/image.png)
+
+
+
+# Thought process
+
+We need to be evaluating anomalies wrt their surroundings. One point can be normal depending on its surroundings. The bear will be hunting, fighting with other bears. 
+
+
+# Data to Collect
+
+- [] Age of the bear.
+- [] Max-min normal heartbeat in summer.
+- [] Maxmin normal heartbeet in winter.
+- [] heartbeat rates of an older bear -> To have a declining trend over years. (optional)
