@@ -1,0 +1,17 @@
+all: build
+
+build:
+	docker-compose build --no-cache
+
+clean:
+	docker-compose down --volumes --remove-orphans
+	docker system prune -af
+
+run:
+	docker-compose up
+	xdg-open http://localhost:8086
+
+stop:
+	docker-compose down
+
+rebuild: clean build run
