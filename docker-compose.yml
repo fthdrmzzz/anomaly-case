@@ -17,21 +17,21 @@ services:
       - influxdb_data:/var/lib/influxdb2
       - influxdb_config:/etc/influxdb2
   
-  simulator:
-    build: ./simulator
-    depends_on:
-      - influxdb
-    environment:
-      - INFLUXDB_URL=${INFLUXDB_URL}
+  # simulator:
+  #   build: ./simulator
+  #   depends_on:
+  #     - influxdb
+  #   environment:
+  #     - INFLUXDB_URL=${INFLUXDB_URL}
 
-  anomaly_detector:
-    build: ./detector
-    depends_on:
-      - influxdb
-    environment:
-      - INFLUXDB_URL=${INFLUXDB_URL}
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
-      - INFLUXDB_ORG=${INFLUXDB_ORG}
+  # anomaly_detector:
+  #   build: ./detector
+  #   depends_on:
+  #     - influxdb
+  #   environment:
+  #     - INFLUXDB_URL=${INFLUXDB_URL}
+  #     - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+  #     - INFLUXDB_ORG=${INFLUXDB_ORG}
 
 volumes:
   influxdb_data:

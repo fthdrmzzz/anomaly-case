@@ -9,8 +9,7 @@ clean:
 
 run:
 	docker-compose up
-	xdg-open http://localhost:8086
-
+	
 stop:
 	docker-compose down
 
