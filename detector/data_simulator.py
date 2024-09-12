@@ -28,11 +28,12 @@ client = InfluxDBClient(url="http://localhost:8086", token=INFLUXDB_TOKEN)
 # WRITE IN LOOP
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
-hear_rate_summer_high = 100
-hearth_rate_summer_low = 85
+#heart rate
+hr_summer_high = 100
+hr_summer_low = 85
 
-hearth_rate_winter_high = 20
-hearth_rate_winter_low = 12
+hr_winter_high = 20
+hr_winter_low = 12
 
 #daily activity minutes
 dam_summer_high = 1000
@@ -40,6 +41,9 @@ dam_summer_low = 600
 
 dam_winter_high = 30
 dam_winter_low = 0
+
+
+
 while True:
     
     data = "mem,host=host1 used_percent=23.43234543"
