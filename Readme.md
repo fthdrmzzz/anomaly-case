@@ -21,6 +21,8 @@ We need to be evaluating anomalies wrt their surroundings. One point can be norm
 
 
 # Data to Collect
+- Sample collected from `https://datadryad.org/stash/dataset/doi:10.5061/dryad.6tt0h5s`.
+
 
 - [] Age of the bear.
 - [] Max-min normal heartbeat in summer.
