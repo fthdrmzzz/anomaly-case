@@ -17,10 +17,9 @@ The data_sim docker container will be adding data already. You can view added da
 
 
 
-# Thought process
+# Anomaly Detection
 
-We need to be evaluating anomalies wrt their surroundings. One point can be normal depending on its surroundings. The bear will be hunting, fighting with other bears. 
-
+anomaly_detection.ipynb under development right now.
 
 # Data to Collect
 - Sample collected from `https://datadryad.org/stash/dataset/doi:10.5061/dryad.6tt0h5s`.
