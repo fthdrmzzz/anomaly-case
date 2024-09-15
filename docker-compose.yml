@@ -19,14 +19,14 @@ services:
       - influxdb2-admin-password
       - influxdb2-admin-token
 
-  grafana:
-    build: ./grafana
-    ports:
-      - "3000:3000"
-    depends_on:
-      - influxdb
-    volumes:
-      - grafana_data:/var/lib/grafana
+  # grafana:
+  #   build: ./grafana
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - influxdb
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
 
   data_sim:
     build: ./data_sim
