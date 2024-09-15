@@ -6,12 +6,14 @@ just run `make run` on working directory. Influxdb (timeseries database) will be
 You can check if it is running by going `http://localhost:8086`. Username and password information is in `.env` file.
 
 # How to add data?
-influxdb provides ready to run code in its ui. I have copied it to `data_simulator.py`. So you can just run that python code. No need to run in docker.
+The data_sim docker container will be adding data already. You can view added data in influxdb dashboard. 
+- Open the `http://localhost:8086`.
+- Login using username and password.
+- Then, go to dashboards.
+- Click create new dashboard -> import from json
+- copy ./influxdb/stream.json there.
+- then open dashboard named stream. You can see the data stream
 
-
-After running it, it will add data every 5 seconds. You can observe it in the UI:
-
-![alt text](docs/image.png)
 
 
 
