@@ -56,7 +56,7 @@ result = query_api.query_data_frame(query=query)
 # Closing the client
 client.close()
 
-result.drop(columns=['table','_result'],inplace=True)
+result.drop(columns=['table'],inplace=True)
 
 
 #%%
