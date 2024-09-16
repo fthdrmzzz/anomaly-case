@@ -35,7 +35,7 @@ def convert_to_rfc3339(timestamp):
     return rfc3339_format
 
 class DayGenerator:
-    def __init__(self, years_to_extend=1, noise_std=2.7, anomaly_prob=0.0085):
+    def __init__(self, years_to_extend=1, noise_std=2.7, anomaly_prob=0.010):
         self.noise_std = noise_std
 
         self.df_original = pd.read_csv('./df_filtered_extended_final.csv')
@@ -60,7 +60,7 @@ class DayGenerator:
         df_extended = df_extended.resample('D').mean().interpolate(method='linear') 
         df_extended.reset_index(inplace=True)
         return df_extended
-    def get_next_day(self):
+    def get_next_day(self, noise=True):
         results = []
         if self.current_index >= len(self.df_extended):
             self.df_extended = self.extend_df(self.df_extended, years=self.years_to_extend)
@@ -68,23 +68,22 @@ class DayGenerator:
         base_data = self.df_extended.iloc[self.current_index]
         self.current_index += 1  
 
-        for hour in [9, 12, 15, 18]: 
+        for hour in [0,6,12,18]:
             modified_data = base_data.copy()
             modified_time = pd.Timestamp(modified_data['GMT_date']).replace(hour=hour, minute=0, second=0)
             modified_data['GMT_date'] = modified_time
             modified_data['HeartRate_Noisy'] += np.random.normal(loc=0, scale=self.noise_std / 10)
 
-            if np.random.rand() < self.anomaly_prob:
-                anomaly_change = np.random.uniform(low=0.5, high=2) * modified_data['HeartRate_Noisy']
-                if np.random.rand() < 1/3:
-                    modified_data['HeartRate_Noisy'] = max(modified_data['HeartRate_Noisy'] / 2, modified_data['HeartRate_Noisy'] - anomaly_change)
-                else:
-                    modified_data['HeartRate_Noisy'] = max(modified_data['HeartRate_Noisy'] / 2, modified_data['HeartRate_Noisy'] + anomaly_change)
+            if noise:
+                if np.random.rand() < self.anomaly_prob:
+                    anomaly_change = np.random.uniform(low=0.5, high=2) * modified_data['HeartRate_Noisy']
+                    if np.random.rand() < 1/3:
+                        modified_data['HeartRate_Noisy'] = max(modified_data['HeartRate_Noisy'] / 2, modified_data['HeartRate_Noisy'] - anomaly_change)
+                    else:
+                        modified_data['HeartRate_Noisy'] = max(modified_data['HeartRate_Noisy'] / 2, modified_data['HeartRate_Noisy'] + anomaly_change)
 
             
             results.append(modified_data)
-
-
         return results
 
     
@@ -107,23 +106,8 @@ if __name__ == '__main__':
     try:
         time_added = datetime.utcnow() - timedelta(seconds=365)
         time.sleep(0.25)
-        batch_data=[]
-        for index, row in day_gen.df_original.iterrows():
-            if not row['HeartRate_Noisy']:
-                row['HeartRate_Noisy'] = 65
-            time_added += timedelta(seconds=1)
-            point = Point("heart_rate") \
-                .tag("unit", "bpm") \
-                .field("smoothed", row['HeartRate_Smoothed']) \
-                .field("noisy", row['HeartRate_Noisy']) \
-                .field("original_time", convert_to_rfc3339(row['GMT_date'])) \
-                .time(time_added, WritePrecision.MS)
-            batch_data.append(point)
-        write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=batch_data)
-        batch_data=[]
-        
-        while True:
-            day_data_points = day_gen.get_next_day()
+        for i in range(0,365):
+            day_data_points = day_gen.get_next_day(noise=False)
             for data_point in day_data_points:
                 print(data_point)
 
@@ -135,7 +119,24 @@ if __name__ == '__main__':
                     .time(datetime.utcnow(), WritePrecision.MS)
 
                 write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=influx_data_point)
-                time.sleep(0.25)
+        
+        while True:
+            day_data_points = day_gen.get_next_day()
+            ctr = 0
+            for data_point in day_data_points:
+                ctr+=1
+                if ctr%1000==0:
+                    print(data_point)
+
+                influx_data_point = Point("heart_rate") \
+                    .tag("unit", "bpm") \
+                    .field("smoothed", data_point['HeartRate_Smoothed']) \
+                    .field("noisy", data_point['HeartRate_Noisy']) \
+                    .field("original_time", convert_to_rfc3339(data_point['GMT_date'])) \
+                    .time(datetime.utcnow(), WritePrecision.MS)
+
+                write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=influx_data_point)
+                time.sleep(0.03)
 
     except KeyboardInterrupt:
         print("Interrupted, shutting down.")

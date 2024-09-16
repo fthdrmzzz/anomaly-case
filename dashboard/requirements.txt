@@ -1,0 +1,7 @@
+influxdb-client
+numpy
+pandas
+matplotlib
+datetime
+plotly
+panel

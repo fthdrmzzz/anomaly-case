@@ -14,3 +14,7 @@ stop:
 	docker-compose down
 
 rebuild: clean build run
+
+rerun:
+	docker-compose down --volumes --remove-orphans
+	docker-compose up 

@@ -1,0 +1,10 @@
+influxdb-client
+numpy
+pandas
+matplotlib
+datetime
+tensorflow
+keras
+pytz
+plotly
+scikit-learn
