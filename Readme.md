@@ -1,6 +1,21 @@
+___
 
-# Anomaly Detection Case: Cobblestone
+- [Anomaly Detection Case](#anomaly-detection-case)
+  - [Requirements](#requirements)
+  - [Show Me the Demo](#show-me-the-demo)
+  - [Data Simulation](#data-simulation)
+    - [What Is Our Data?](#what-is-our-data)
+    - [Generating the Data](#generating-the-data)
+  - [Anomaly Detection](#anomaly-detection)
+  - [Implementation and Used Technologies](#implementation-and-used-technologies)
+___
 
+# Anomaly Detection Case
+## Requirements
+- git
+- docker
+- docker-compose
+- make
 ## Show Me the Demo
 
 1. **Clone the Repository:**
@@ -17,7 +32,7 @@
    ```bash
    make run
    ```
-   This will start containers for data population and anomaly detection. The dashboard will be available at `http://localhost:5006/dashboard`. It may take up to 2 minutes to display detected anomalies. To see changes in data refresh the page.
+   This will start containers for data population and anomaly detection. The dashboard will be available at `http://localhost:5006/dashboard`. It may take up to 5 minutes to display detected anomalies. To see changes in data **refresh** the page.
 
 ## Data Simulation
 
@@ -39,8 +54,47 @@ After generating the data for one season, I smoothed it using a windowed mean. I
 
 ![Data Stream](image-3.png)
 
-# Anomaly Detection
+## Anomaly Detection
 
-I have decided to go with auto-encoding to implement anomaly detection in this project. In simple terms, our model tries to reconstruct the data we provided in training. And the loss is how far is newly introduced data from the guess of our model. If loss is larger than a certain threshold (setup manually since we only have non-anomaly data for training). Below you can see effectiveness of loss-threshold model in detecting introduced anomalies. First graph shows the loss vs threshold  during time. The second graph shows, introduced anomalies in generated data.
+I have decided to go with auto-encoding to implement anomaly detection in this project. In simple terms, our model tries to reconstruct the data we provided in training. And the loss is how far is newly introduced data from the guess of our model. If loss is larger than a certain threshold (setup manually since we only have non-anomaly data for training) the data point that is responsible for that loss is flagged as anomaly. Below you can see effectiveness of loss-threshold model in detecting introduced anomalies. First graph shows the loss vs threshold  during time. The second graph shows, introduced anomalies in generated data.
 
 ![alt text](image-4.png)
+
+## Implementation and Used Technologies
+```
+C:.
+│   .env
+│   docker-compose.yml
+│   Makefile
+│   Readme.md
+├───dashboard
+│       dashboard.py
+│       Dockerfile
+│       requirements.txt
+├───data_sim
+│       data_simulator.py
+│       df_filtered_extended_final.csv
+│       Dockerfile
+│       requirements.txt
+├───detector
+│       anomaly_detection.py
+│       Dockerfile
+│       requirements.txt
+├───influxdb
+│       Dockerfile
+│       stream.json
+└───preprocessing
+        ad_from_experimentdata.ipynb
+        anomaly_detection.ipynb
+        data_gen.ipynb
+        preprocess.ipynb
+```
+I aimed to prepare the project to be ready to run on any system that can run docker. The file hierarchy can be seen above. `data_sim` simulates the data stream and pushes the data to the timeseries database. 
+
+`influxdb` is the timeseries database used to push and read data. `data_sim` and `detector` pushes to `influxdb`, `dashboard` and `detector` reads from influxdb. 
+
+`detector` is the program where anomaly detection is done. It pulls first year of data from influxdb. Then trains the autoencoder lstm model with first years data. Then, it starts testing the stream data constantly being pushed by `data_sim`. Data flagged by `detector` is later pushed to `influxdb`.
+
+`dashboard`, pulls stream data and anomaly flagged data from `influxdb` and exports the dashboard.
+
+`Preprocessing` folder was used as playground.

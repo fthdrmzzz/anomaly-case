@@ -56,6 +56,8 @@ class AnomalyDetector():
         self.scaler = None
         self.time_steps=30
         self.current_year=2017
+
+    # Runs the anomaly detection of stream data.
     def run(self):
         
         while True:
@@ -74,6 +76,8 @@ class AnomalyDetector():
                 |> sort(columns: ["original_time"])
             '''
             new_df = self.query_api.query_data_frame(query=flux_query)
+
+            # Waits until enough data worth testing accumulated
             if len(new_df)<363*4:
                 time.sleep(5)
                 continue
@@ -87,7 +91,6 @@ class AnomalyDetector():
             self.push_data_to_influxdb(anomaly_flagged_df)
 
     def push_data_to_influxdb(self,df):
-        
         points = []
         for idx, row in df.iterrows():
             points.append(
@@ -102,11 +105,12 @@ class AnomalyDetector():
             )
         self.write_api.write(bucket=self.bucket, record=points)
             
+    # deprecated
     def has_one_year(self, df):
         time_span = df.index.max() - df.index.min()
         return time_span >= pd.Timedelta(days=365)
-    
 
+    # creates stacked dataset with steps for training
     def create_dataset(self, X, y, time_steps=1):
             Xs, ys = [], []
             for i in range(len(X) - time_steps):
@@ -115,6 +119,7 @@ class AnomalyDetector():
                 ys.append(y.iloc[i + time_steps])
             return np.array(Xs), np.array(ys)
         
+    # Trains the lstm model
     def train_model(self):
         train_data = self.training_df
 
@@ -156,7 +161,8 @@ class AnomalyDetector():
                             name='rate'))
         fig.update_layout(showlegend=True)
         fig.show()         
-            
+    
+    
     def detect_anomalies(self, new_df):
         test_data = new_df.copy()
         model = self.model
@@ -189,6 +195,7 @@ class AnomalyDetector():
 
         return test_score_df
 
+    # Pulls dataframe from influxdb starting from `starting time`
     def get_dataframe_starting(self, starting_time):
         print("Pulling new data starting: ",starting_time)
         query = f'''
@@ -207,6 +214,7 @@ class AnomalyDetector():
             df['original_time'] = pd.to_datetime(df['original_time'])
         return  df
     
+    # pulls the inital dataframe that is going to be used for training
     def get_dataframe_initial(self):
         checkpoint_df = self.get_dataframe_starting('-24h')
         earliest_time = checkpoint_df['original_time'].min()

@@ -34,6 +34,7 @@ def convert_to_rfc3339(timestamp):
     
     return rfc3339_format
 
+# Class that generates simulated data
 class DayGenerator:
     def __init__(self, years_to_extend=1, noise_std=2.7, anomaly_prob=0.010):
         self.noise_std = noise_std
@@ -43,16 +44,17 @@ class DayGenerator:
         self.df_original['HeartRate_Smoothed'] = self.df_original['HeartRate'].rolling(window=10).mean()
         self.df_original['HeartRate_Noisy'] = self.df_original['HeartRate_Smoothed'] + np.random.normal(loc=0, scale=self.noise_std / 2, size=len(self.df_original))
         
-        
         self.current_index = len(self.df_original)  
         self.years_to_extend = years_to_extend  
         self.df_extended = self.extend_df(self.df_original, years=years_to_extend)  
         self.anomaly_prob = anomaly_prob
+
+    # Extends initial smoothed data for a year.
+    # Later this data is will be used to generate stream
     def extend_df(self, df, years=1):
         df = df.drop(columns=['Object_ID', 'Species'], errors='ignore')  
         df2 = df.copy()  
         df2['GMT_date'] = df2['GMT_date'] + pd.DateOffset(years=years)  
-        
         df2['HeartRate_Noisy'] = df2['HeartRate_Smoothed'] + np.random.normal(loc=0, scale=self.noise_std / 2, size=len(df2))
         
         df_extended = pd.concat([df, df2], ignore_index=True)
@@ -60,6 +62,10 @@ class DayGenerator:
         df_extended = df_extended.resample('D').mean().interpolate(method='linear') 
         df_extended.reset_index(inplace=True)
         return df_extended
+    
+    # Actual function that used to generate the strea, data.
+    # white noise added to data in general. Anomalies are also added as 
+    # unusual noise with low probabilities.
     def get_next_day(self, noise=True):
         results = []
         if self.current_index >= len(self.df_extended):
@@ -88,6 +94,8 @@ class DayGenerator:
 
     
 if __name__ == '__main__':
+
+    # Connect to the database.
     client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN)
     while True:
         try:
@@ -101,11 +109,16 @@ if __name__ == '__main__':
 
         print("Retrying in 5 seconds...")
         time.sleep(5)
+
+    # initialize data stream generator
     day_gen = DayGenerator(years_to_extend=1)
     write_api = client.write_api(write_options=SYNCHRONOUS)
     try:
         time_added = datetime.utcnow() - timedelta(seconds=365)
         time.sleep(0.25)
+
+        # Push 1st year of data without anomalies.
+        # will be used for training
         for i in range(0,365):
             day_data_points = day_gen.get_next_day(noise=False)
             for data_point in day_data_points:
@@ -120,6 +133,7 @@ if __name__ == '__main__':
 
                 write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=influx_data_point)
         
+        # push nonstop data
         while True:
             day_data_points = day_gen.get_next_day()
             ctr = 0

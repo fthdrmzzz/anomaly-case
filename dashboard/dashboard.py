@@ -14,8 +14,6 @@ styles = {
     "padding": "10px",
 }
 
-
-
 INFLUXDB_USERNAME = "admin"
 INFLUXDB_PASSWORD = "password"
 INFLUXDB_TOKEN = "G3UtSut5Kv-RuT32yh27StdDCrl4fu3uzxPLzdias8vFsNzyzgfw5kIX9iGvtLctAXpZjFItOUwA65YWtk_5fg=="
